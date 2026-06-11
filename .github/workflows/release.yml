@@ -1,0 +1,34 @@
+name: Galaxy OS Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc make nasm xorriso mtools
+
+      - name: Build Kernel
+        run: make kernel.elf
+
+      - name: Create ISO
+        run: |
+          mkdir -p iso_root
+          # Note: Real build would fetch limine binaries
+          cp kernel.elf iso_root/
+          xorriso -as mkisofs -o ArenaOS-Galaxy.iso iso_root
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ArenaOS-Galaxy.iso
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
