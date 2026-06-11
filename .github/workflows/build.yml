@@ -25,35 +25,32 @@ jobs:
       run: |
         mkdir -p iso_root/boot/limine
         
-        # Создаем конфиг через простые echo - это самый безопасный способ для YAML
-        echo "TIMEOUT=5" > iso_root/boot/limine/limine.conf
-        echo "" >> iso_root/boot/limine/limine.conf
-        echo ":ArenaOS" >> iso_root/boot/limine/limine.conf
-        echo "    PROTOCOL=limine" >> iso_root/boot/limine/limine.conf
-        echo "    KERNEL_PATH=boot:///kernel.elf" >> iso_root/boot/limine/limine.conf
+        # Создаем конфиг через printf. \n - это четкий перенос строки.
+        # ВАЖНО: Никаких пробелов перед двоеточием и PROTOCOL!
+        printf "TIMEOUT=5\n\n:ArenaOS\nPROTOCOL=limine\nKERNEL_PATH=boot:///kernel.elf\n" > iso_root/boot/limine/limine.conf
         
-        # Дублируем в корень для гарантии
+        # Копируем конфиг и в корень тоже для подстраховки
         cp iso_root/boot/limine/limine.conf iso_root/limine.conf
         
         # Копируем ядро
         cp kernel.elf iso_root/
         
-        # Копируем файлы загрузчика
+        # Системные файлы Limine
         cp limine/limine-bios.sys limine/limine-bios-cd.bin limine/limine-uefi-cd.bin iso_root/
         
-        # UEFI поддержка
+        # Поддержка UEFI
         mkdir -p iso_root/EFI/BOOT
         cp limine/BOOTX64.EFI iso_root/EFI/BOOT/
         cp limine/BOOTIA32.EFI iso_root/EFI/BOOT/
         
-        # Сборка ISO образа
+        # Сборка ISO
         xorriso -as mkisofs -b limine-bios-cd.bin \
                 -no-emul-boot -boot-load-size 4 -boot-info-table \
                 --efi-boot limine-uefi-cd.bin \
                 -efi-boot-part --efi-boot-image --protective-msdos-label \
-                -R -l iso_root -o ArenaOS-Reality.iso
+                iso_root -o ArenaOS-Reality.iso
                 
-        # Установка загрузчика для BIOS режима
+        # Прошивка BIOS
         ./limine/limine bios-install ArenaOS-Reality.iso
 
     - name: Upload ISO
