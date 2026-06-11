@@ -9,7 +9,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install dependencies
         run: |
@@ -22,13 +22,13 @@ jobs:
       - name: Create ISO
         run: |
           mkdir -p iso_root
-          # Note: Real build would fetch limine binaries
+          # Используем актуальное имя файла
           cp kernel.elf iso_root/
-          xorriso -as mkisofs -o ArenaOS-Galaxy.iso iso_root
+          xorriso -as mkisofs -o ArenaOS-Reality.iso iso_root
 
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
-          files: ArenaOS-Galaxy.iso
+          files: ArenaOS-Reality.iso
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
