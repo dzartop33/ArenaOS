@@ -24,10 +24,19 @@ jobs:
     - name: Create ISO
       run: |
         mkdir -p iso_root
+        mkdir -p iso_root/boot/limine
         
-        # Генерируем чистый конфиг прямо внутри Linux-сервера GitHub
-        # Это гарантирует правильный формат файла
-        printf "TIMEOUT=5\n:ArenaOS\nPROTOCOL=limine\nKERNEL_PATH=boot:///kernel.elf\n" > iso_root/limine.conf
+        # Создаем конфиг сразу в двух местах для надежности
+        # Используем максимально простую структуру
+        cat << 'EOF' > iso_root/boot/limine/limine.conf
+TIMEOUT=5
+
+:ArenaOS
+    PROTOCOL=limine
+    KERNEL_PATH=boot:///kernel.elf
+EOF
+        # Копируем конфиг и в корень тоже
+        cp iso_root/boot/limine/limine.conf iso_root/limine.conf
         
         # Копируем ядро
         cp kernel.elf iso_root/
@@ -35,19 +44,19 @@ jobs:
         # Копируем системные файлы загрузчика
         cp limine/limine-bios.sys limine/limine-bios-cd.bin limine/limine-uefi-cd.bin iso_root/
         
-        # Настройка для UEFI
+        # Поддержка UEFI
         mkdir -p iso_root/EFI/BOOT
         cp limine/BOOTX64.EFI iso_root/EFI/BOOT/
         cp limine/BOOTIA32.EFI iso_root/EFI/BOOT/
         
-        # Сборка ISO образа
+        # Сборка ISO (добавлена поддержка Rock Ridge -R для стабильности имен)
         xorriso -as mkisofs -b limine-bios-cd.bin \
                 -no-emul-boot -boot-load-size 4 -boot-info-table \
                 --efi-boot limine-uefi-cd.bin \
                 -efi-boot-part --efi-boot-image --protective-msdos-label \
-                iso_root -o ArenaOS-Reality.iso
+                -R -l iso_root -o ArenaOS-Reality.iso
                 
-        # Прошивка загрузчика
+        # Прошивка для BIOS
         ./limine/limine bios-install ArenaOS-Reality.iso
 
     - name: Upload ISO
