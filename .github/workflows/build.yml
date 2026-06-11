@@ -1,17 +1,12 @@
-name: Build OS ISO
-
-on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+name: Build ArenaOS
+on: [push, pull_request]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Install dependencies
       run: |
@@ -38,11 +33,11 @@ jobs:
                 -no-emul-boot -boot-load-size 4 -boot-info-table \
                 --efi-boot limine-uefi-cd.bin \
                 -efi-boot-part --efi-boot-image --protective-msdos-label \
-                iso_root -o MyOS.iso
-        ./limine/limine bios-install MyOS.iso
+                iso_root -o ArenaOS-Reality.iso
+        ./limine/limine bios-install ArenaOS-Reality.iso
 
     - name: Upload ISO
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
-        name: MyOS-ISO
-        path: MyOS.iso
+        name: ArenaOS-Reality-ISO
+        path: ArenaOS-Reality.iso
