@@ -3,17 +3,22 @@ ENTRY(_start)
 
 PHDRS
 {
-    text    PT_LOAD    FLAGS((1 << 0) | (1 << 2)) ; /* Execute + Read */
-    rodata  PT_LOAD    FLAGS((1 << 2)) ;            /* Read only */
-    data    PT_LOAD    FLAGS((1 << 1) | (1 << 2)) ; /* Write + Read */
+    limine_requests PT_LOAD FLAGS(0x07); /* Read/Write/Execute */
+    text PT_LOAD FLAGS(0x05);            /* Read/Execute */
+    rodata PT_LOAD FLAGS(0x04);          /* Read Only */
+    data PT_LOAD FLAGS(0x06);            /* Read/Write */
 }
 
 SECTIONS
 {
     . = 0xffffffff80000000;
 
-    .text : {
+    /* Секция запросов Limine ДОЛЖНА быть первой */
+    .limine_reqs : {
         KEEP(*(.limine_reqs))
+    } :limine_requests
+
+    .text : {
         *(.text .text.*)
     } :text
 
