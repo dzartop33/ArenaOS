@@ -15,7 +15,8 @@ jobs:
 
     - name: Download Limine
       run: |
-        git clone https://github.com/limine-bootloader/limine.git --branch=v5.x-binary --depth=1
+        # Используем актуальную ветку v8.x-binary
+        git clone https://github.com/limine-bootloader/limine.git --branch=v8.x-binary --depth=1
         make -C limine
 
     - name: Build Kernel
@@ -34,6 +35,7 @@ jobs:
                 --efi-boot limine-uefi-cd.bin \
                 -efi-boot-part --efi-boot-image --protective-msdos-label \
                 iso_root -o ArenaOS-Reality.iso
+        # Установка загрузчика для BIOS режима
         ./limine/limine bios-install ArenaOS-Reality.iso
 
     - name: Upload ISO
