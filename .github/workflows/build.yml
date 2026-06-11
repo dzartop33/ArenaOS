@@ -15,7 +15,6 @@ jobs:
 
     - name: Download Limine
       run: |
-        # Используем стабильную ветку v8.x-binary
         git clone https://github.com/limine-bootloader/limine.git --branch=v8.x-binary --depth=1
         make -C limine
 
@@ -25,29 +24,30 @@ jobs:
     - name: Create ISO
       run: |
         mkdir -p iso_root
-        mkdir -p iso_root/boot
         
-        # Копируем ядро и конфигурацию в нужные места
+        # Генерируем чистый конфиг прямо внутри Linux-сервера GitHub
+        # Это гарантирует правильный формат файла
+        printf "TIMEOUT=5\n:ArenaOS\nPROTOCOL=limine\nKERNEL_PATH=boot:///kernel.elf\n" > iso_root/limine.conf
+        
+        # Копируем ядро
         cp kernel.elf iso_root/
-        cp limine.conf iso_root/
-        cp limine.conf iso_root/boot/
         
         # Копируем системные файлы загрузчика
         cp limine/limine-bios.sys limine/limine-bios-cd.bin limine/limine-uefi-cd.bin iso_root/
         
-        # Поддержка UEFI
+        # Настройка для UEFI
         mkdir -p iso_root/EFI/BOOT
         cp limine/BOOTX64.EFI iso_root/EFI/BOOT/
         cp limine/BOOTIA32.EFI iso_root/EFI/BOOT/
         
-        # Создание загрузочного ISO образа
+        # Сборка ISO образа
         xorriso -as mkisofs -b limine-bios-cd.bin \
                 -no-emul-boot -boot-load-size 4 -boot-info-table \
                 --efi-boot limine-uefi-cd.bin \
                 -efi-boot-part --efi-boot-image --protective-msdos-label \
                 iso_root -o ArenaOS-Reality.iso
                 
-        # Прошивка загрузчика в MBR для BIOS
+        # Прошивка загрузчика
         ./limine/limine bios-install ArenaOS-Reality.iso
 
     - name: Upload ISO
