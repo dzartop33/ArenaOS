@@ -3,7 +3,6 @@
 #include "limine.h"
 #include "tty.h"
 
-// Принудительное выравнивание по 8 байт для протокола Limine
 __attribute__((used, section(".limine_reqs"), aligned(8)))
 static volatile uint64_t limine_base_revision[3] = { 0xf9562367071972a9, 0x0061d138b16f3d7a, 0 };
 
@@ -21,9 +20,10 @@ void _start(void) {
     struct limine_framebuffer *fb = fb_req.response->framebuffers[0];
     tty_init(fb);
     
-    tty_print("ARENA OS STATUS: OPERATIONAL\n");
-    tty_print("----------------------------\n");
-    tty_print("Logic Check: PASS\n");
+    tty_print("ARENA OS: ONLINE\n");
+    tty_print("----------------\n");
+    tty_print("Bootloader Limine 8.x: Connected\n");
+    tty_print("Kernel: Alive\n");
 
     for (;;) __asm__ volatile ("hlt");
 }
