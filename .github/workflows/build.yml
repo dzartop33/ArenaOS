@@ -7,8 +7,8 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Install Tools
-      run: sudo apt-get update && sudo apt-get install -y gcc make xorriso mtools
+    - name: Install dependencies
+      run: sudo apt-get update && sudo apt-get install -y gcc make xorriso mtools python3
 
     - name: Download Limine
       run: |
@@ -18,17 +18,20 @@ jobs:
     - name: Build Kernel
       run: make kernel.elf
 
-    - name: Create ISO (Byte-Perfect)
+    - name: Create ISO
       run: |
         mkdir -p iso_root
-        
-        # СОЗДАЕМ ИДЕАЛЬНЫЙ КОНФИГ БЕЗ СИМВОЛОВ WINDOWS
-        # \n - это жесткий перенос строки Linux
-        printf "TIMEOUT=3\n:ArenaOS\nPROTOCOL=limine\nKERNEL_PATH=boot:///kernel.elf\n" > iso_root/limine.conf
-        
         cp kernel.elf iso_root/
         cp limine/limine-bios.sys limine/limine-bios-cd.bin limine/limine-uefi-cd.bin iso_root/
         
+        # Создаем конфиг через Python для идеальной кодировки
+        python3 -c "
+        content = 'TIMEOUT=5\n\n:ArenaOS\n    PROTOCOL=limine\n    KERNEL_PATH=boot:///kernel.elf\n'
+        with open('iso_root/limine.conf', 'w', newline='\n') as f:
+            f.write(content)
+        "
+
+        # Сборка ISO
         xorriso -as mkisofs -b limine-bios-cd.bin \
                 -no-emul-boot -boot-load-size 4 -boot-info-table \
                 --efi-boot limine-uefi-cd.bin \
@@ -37,7 +40,7 @@ jobs:
         
         ./limine/limine bios-install ArenaOS.iso
 
-    - name: Upload
+    - name: Upload ISO
       uses: actions/upload-artifact@v4
       with:
         name: ArenaOS-ISO
